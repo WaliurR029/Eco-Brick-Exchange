@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Brick Exchange - Rewards Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateZ(0);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px) translateZ(0);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .card-hover:active {
+            transform: translateY(-2px) translateZ(0);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .reward-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            transform: translateZ(0);
+        }
+        
+        .reward-item:hover {
+            background-color: #f0fdf4;
+            border-color: #10b981;
+            transform: translateY(-2px) translateZ(0);
+        }
+        
+        .reward-item:active {
+            transform: translateY(0) translateZ(0);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .modal-content {
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .button-press {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateZ(0);
+        }
+        
+        .button-press:active {
+            transform: scale(0.98) translateZ(0);
+        }
+        
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .card-hover:hover {
+                transform: none;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            
+            .reward-item:hover {
+                transform: none;
+                background-color: #f9fafb;
+            }
+            
+            .modal {
+                padding: 1rem;
+                align-items: flex-end;
+            }
+            
+            .modal-content {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0;
+                border-radius: 1rem 1rem 0 0;
+                max-height: 85vh;
+            }
+            
+            .mobile-bottom-sheet {
+                animation: slideUpMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            @keyframes slideUpMobile {
+                from {
+                    transform: translateY(100%);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+            
+            /* Touch-friendly button sizes */
+            button {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Improved text readability on mobile */
+            .text-xs {
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+            
+            .text-sm {
+                font-size: 0.875rem;
+                line-height: 1.3;
+            }
+            
+            /* Better spacing on mobile */
+            .mobile-spacing {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            /* Optimized grid for mobile */
+            .mobile-grid-1 {
+                grid-template-columns: 1fr;
+            }
+            
+            .mobile-grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Tablet optimizations */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .tablet-grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #10b981;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Smooth transitions for all interactive elements */
+        button, .reward-item, .card-hover, a {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg animate-fade-in">
+        <div class="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center">
+                        <span class="text-green-600 font-bold text-lg sm:text-xl">🧱</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-2xl font-bold">Eco Brick Exchange</h1>
+                        <p class="text-green-100 text-xs sm:text-sm hidden sm:block">Turning Waste into Rewards</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-green-100 text-xs sm:text-sm">Welcome back!</p>
+                    <p class="font-semibold text-sm sm:text-base" id="userName">John Doe</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <!-- Total Points -->
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 card-hover animate-slide-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-xs sm:text-sm font-medium">Total Points</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-green-600" id="totalPoints">1,250</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-green-600 text-lg sm:text-xl">⭐</span>
+                    </div>
+                </div>
+                <div class="mt-3 sm:mt-4">
+                    <div class="bg-gray-200 rounded-full h-2">
+                        <div class="progress-bar h-2 rounded-full" style="width: 75%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">75% to next reward tier</p>
+                </div>
+            </div>
+
+            <!-- Contributions -->
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 card-hover animate-slide-in" style="animation-delay: 0.1s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-xs sm:text-sm font-medium">Total Contributions</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-blue-600" id="totalContributions">47</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 text-lg sm:text-xl">♻️</span>
+                    </div>
+                </div>
+                <p class="text-xs sm:text-sm text-gray-500 mt-2">This month: +12 contributions</p>
+            </div>
+
+            <!-- Environmental Impact -->
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 card-hover animate-slide-in sm:col-span-2 lg:col-span-1" style="animation-delay: 0.2s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-xs sm:text-sm font-medium">Plastic Recycled</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-purple-600" id="plasticRecycled">23.5</p>
+                        <p class="text-xs sm:text-sm text-gray-500">kg</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span class="text-purple-600 text-lg sm:text-xl">🌱</span>
+                    </div>
+                </div>
+                <p class="text-xs sm:text-sm text-gray-500 mt-2">CO₂ saved: 47kg</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 animate-slide-in" style="animation-delay: 0.3s;">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <button onclick="showSmartBinStatus()" class="button-press flex items-center justify-center space-x-2 sm:space-x-3 bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
+                    <span class="text-lg sm:text-xl">🗑️</span>
+                    <span class="font-medium">Smart Bin Status</span>
+                </button>
+                <button onclick="showContributeModal()" class="button-press flex items-center justify-center space-x-2 sm:space-x-3 bg-blue-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base">
+                    <span class="text-lg sm:text-xl">➕</span>
+                    <span class="font-medium">Add Contribution</span>
+                </button>
+                <button onclick="showProfilePage()" class="button-press flex items-center justify-center space-x-2 sm:space-x-3 bg-purple-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base">
+                    <span class="text-lg sm:text-xl">👤</span>
+                    <span class="font-medium">My Profile</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Available Rewards -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 animate-slide-in" style="animation-delay: 0.4s;">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Available Rewards</h2>
+                <span class="text-xs sm:text-sm text-gray-500">Your Points: <span class="font-semibold text-green-600">1,250</span></span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" id="rewardsGrid">
+                <!-- Eco-Friendly Pen -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('pen', 100)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">🖊️</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Eco-Friendly Pen</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Made from recycled materials</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">100 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plant Sapling -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('plant', 200)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">🌱</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Plant Sapling</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Native tree sapling for planting</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">200 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discount Coupon -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('coupon', 150)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">🎫</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Store Discount</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">10% off at partner stores</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">150 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reusable Water Bottle -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('bottle', 300)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">🍶</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Water Bottle</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Reusable stainless steel bottle</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">300 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eco Bag -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('bag', 250)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">👜</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Eco Shopping Bag</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Durable canvas shopping bag</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">250 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Reward -->
+                <div class="reward-item border-2 border-gray-200 rounded-lg p-3 sm:p-4" onclick="redeemReward('premium', 500)">
+                    <div class="text-center">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <span class="text-xl sm:text-2xl">🏆</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 text-sm sm:text-base">Eco Champion Kit</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Complete sustainability starter pack</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-green-600 font-bold text-sm sm:text-base">500 Points</span>
+                            <button class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 animate-slide-in" style="animation-delay: 0.5s;">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Recent Activity</h2>
+            <div class="space-y-3 sm:space-y-4" id="activityList">
+                <div class="flex items-center space-x-3 sm:space-x-4 p-3 bg-green-50 rounded-lg">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 text-sm sm:text-base">➕</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-800 text-sm sm:text-base">Plastic bottles contributed</p>
+                        <p class="text-xs sm:text-sm text-gray-600">2 hours ago • +50 points</p>
+                    </div>
+                    <span class="text-green-600 font-semibold text-sm sm:text-base flex-shrink-0">+50</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 sm:space-x-4 p-3 bg-blue-50 rounded-lg">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-blue-600 text-sm sm:text-base">🎁</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-800 text-sm sm:text-base">Redeemed eco-friendly pen</p>
+                        <p class="text-xs sm:text-sm text-gray-600">1 day ago • -100 points</p>
+                    </div>
+                    <span class="text-red-600 font-semibold text-sm sm:text-base flex-shrink-0">-100</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 sm:space-x-4 p-3 bg-purple-50 rounded-lg">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-purple-600 text-sm sm:text-base">♻️</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-800 text-sm sm:text-base">Paper waste contributed</p>
+                        <p class="text-xs sm:text-sm text-gray-600">3 days ago • +30 points</p>
+                    </div>
+                    <span class="text-green-600 font-semibold text-sm sm:text-base flex-shrink-0">+30</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Contribution Modal -->
+    <div id="contributeModal" class="modal">
+        <div class="modal-content mobile-bottom-sheet bg-white rounded-xl p-4 sm:p-8 max-w-lg w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span class="text-2xl sm:text-3xl">➕</span>
+                </div>
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Add New Contribution</h3>
+                <p class="text-sm sm:text-base text-gray-600">Record your eco-friendly contributions and earn points</p>
+            </div>
+            
+            <form onsubmit="submitContribution(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Waste Type</label>
+                    <select id="wasteType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select waste type...</option>
+                        <option value="plastic" data-points="25">Plastic Bottles (25 pts each)</option>
+                        <option value="paper" data-points="15">Paper Waste (15 pts each)</option>
+                        <option value="aluminum" data-points="20">Aluminum Cans (20 pts each)</option>
+                        <option value="glass" data-points="30">Glass Containers (30 pts each)</option>
+                        <option value="organic" data-points="10">Organic Waste (10 pts each)</option>
+                        <option value="electronics" data-points="50">Electronics (50 pts each)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                    <input type="number" id="quantity" min="1" max="50" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Enter quantity">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <select id="location" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select drop-off location...</option>
+                        <option value="main-campus">Main Campus Bin #1</option>
+                        <option value="cafeteria">Cafeteria Bin #2</option>
+                        <option value="library">Library Bin #3</option>
+                        <option value="garden">Garden Bin #4</option>
+                        <option value="parking">Parking Lot Bin #5</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
+                    <textarea id="notes" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Any additional details about your contribution..."></textarea>
+                </div>
+                
+                <div id="pointsPreview" class="hidden bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Estimated Points:</span>
+                        <span id="estimatedPoints" class="font-semibold text-green-600">0 pts</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
+                    <button type="submit" class="button-press flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 text-sm sm:text-base">
+                        Submit Contribution
+                    </button>
+                    <button type="button" onclick="closeModal('contributeModal')" class="button-press flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 text-sm sm:text-base">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Smart Bin Status Modal -->
+    <div id="smartBinModal" class="modal">
+        <div class="modal-content mobile-bottom-sheet bg-white rounded-xl p-4 sm:p-8 max-w-lg w-full mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span class="text-2xl sm:text-3xl">🗑️</span>
+                </div>
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Smart Bin Status</h3>
+                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Real-time status of nearby smart bins and your pending contributions</p>
+                
+                <!-- Smart Bin List -->
+                <div class="space-y-4 mb-6">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-800">Main Campus Bin #1</h4>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <p>📍 Library Entrance</p>
+                            <p>📊 Capacity: 65% full</p>
+                            <p>⏰ Last emptied: 2 hours ago</p>
+                            <div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                <p class="text-yellow-800 font-medium">⚠️ Pending: 3 items detected</p>
+                                <p class="text-xs text-yellow-700">Scan QR code to claim points</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-800">Cafeteria Bin #2</h4>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Active</span>
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <p>📍 Student Cafeteria</p>
+                            <p>📊 Capacity: 30% full</p>
+                            <p>⏰ Last emptied: 1 hour ago</p>
+                            <div class="mt-3 p-2 bg-gray-50 border border-gray-200 rounded">
+                                <p class="text-gray-600">✅ No pending contributions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <button onclick="simulateQRScan()" class="button-press flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 text-sm sm:text-base">
+                        Scan QR to Claim
+                    </button>
+                    <button onclick="closeModal('smartBinModal')" class="button-press flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 text-sm sm:text-base">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Rewards Modal -->
+    <div id="rewardsModal" class="modal">
+        <div class="modal-content mobile-bottom-sheet bg-white rounded-xl p-4 sm:p-8 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">All Available Rewards</h3>
+            <div class="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <!-- Same rewards as main page but in modal format -->
+                <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl sm:text-2xl">🖊️</span>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-sm sm:text-base">Eco-Friendly Pen</h4>
+                            <p class="text-xs sm:text-sm text-gray-600">100 Points</p>
+                        </div>
+                        <button onclick="redeemReward('pen', 100)" class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl sm:text-2xl">🌱</span>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-sm sm:text-base">Plant Sapling</h4>
+                            <p class="text-xs sm:text-sm text-gray-600">200 Points</p>
+                        </div>
+                        <button onclick="redeemReward('plant', 200)" class="button-press bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700">Redeem</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('rewardsModal')" class="button-press w-full bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 text-sm sm:text-base">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profilePage" class="hidden fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+        <div class="min-h-screen">
+            <!-- Profile Header -->
+            <header class="gradient-bg text-white shadow-lg">
+                <div class="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <button onclick="hideProfilePage()" class="w-8 h-8 sm:w-10 sm:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-colors button-press">
+                                <span class="text-white text-lg font-bold">←</span>
+                            </button>
+                            <div>
+                                <h1 class="text-lg sm:text-2xl font-bold">My Profile</h1>
+                                <p class="text-green-100 text-xs sm:text-sm">Manage your account & track contributions</p>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center">
+                            <span class="text-green-600 font-bold text-lg sm:text-xl">👤</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Profile Content -->
+            <main class="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                <!-- Profile Info Card -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 animate-slide-in">
+                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl sm:text-4xl">👤</span>
+                        </div>
+                        <div class="flex-1 text-center sm:text-left">
+                            <h2 class="text-xl sm:text-2xl font-bold text-gray-800" id="profileName">John Doe</h2>
+                            <p class="text-gray-600" id="profileEmail">john.doe@example.com</p>
+                            <p class="text-sm text-gray-500 mt-1">Member since: January 2024</p>
+                            <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Eco Warrior</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Active Contributor</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="showEditProfile()" class="button-press bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                                Edit Profile
+                            </button>
+                            <button onclick="logout()" class="button-press bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center animate-slide-in">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-green-600 text-xl">⭐</span>
+                        </div>
+                        <p class="text-2xl font-bold text-green-600" id="profileTotalPoints">1,250</p>
+                        <p class="text-xs text-gray-600">Total Points</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center animate-slide-in" style="animation-delay: 0.1s;">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-blue-600 text-xl">♻️</span>
+                        </div>
+                        <p class="text-2xl font-bold text-blue-600" id="profileTotalContributions">47</p>
+                        <p class="text-xs text-gray-600">Contributions</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center animate-slide-in" style="animation-delay: 0.2s;">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-purple-600 text-xl">🌱</span>
+                        </div>
+                        <p class="text-2xl font-bold text-purple-600" id="profilePlasticRecycled">23.5</p>
+                        <p class="text-xs text-gray-600">kg Recycled</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center animate-slide-in" style="animation-delay: 0.3s;">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-yellow-600 text-xl">🏆</span>
+                        </div>
+                        <p class="text-2xl font-bold text-yellow-600">12</p>
+                        <p class="text-xs text-gray-600">Rewards Earned</p>
+                    </div>
+                </div>
+
+                <!-- Contribution History -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 animate-slide-in" style="animation-delay: 0.4s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Contribution History</h3>
+                        <select class="bg-gray-100 border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                            <option>All Time</option>
+                            <option>This Month</option>
+                            <option>This Week</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-3" id="contributionHistory">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <span class="text-green-600">🍶</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Plastic Bottles</p>
+                                    <p class="text-sm text-gray-600">Main Campus Bin #1</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-green-600">+50 pts</p>
+                                <p class="text-xs text-gray-500">2 hours ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600">📄</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Paper Waste</p>
+                                    <p class="text-sm text-gray-600">Library Bin #3</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-blue-600">+30 pts</p>
+                                <p class="text-xs text-gray-500">1 day ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600">🥤</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Aluminum Cans</p>
+                                    <p class="text-sm text-gray-600">Cafeteria Bin #2</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-purple-600">+40 pts</p>
+                                <p class="text-xs text-gray-500">2 days ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                    <span class="text-yellow-600">🍃</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Organic Waste</p>
+                                    <p class="text-sm text-gray-600">Garden Bin #4</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-yellow-600">+25 pts</p>
+                                <p class="text-xs text-gray-500">3 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-4 text-green-600 hover:text-green-700 text-sm font-medium">
+                        View All Contributions →
+                    </button>
+                </div>
+
+                <!-- Monthly Progress -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 animate-slide-in" style="animation-delay: 0.5s;">
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Monthly Progress</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Contributions Goal</span>
+                                <span class="font-medium">12/20</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Points Goal</span>
+                                <span class="font-medium">850/1000</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Recycling Goal</span>
+                                <span class="font-medium">18.5/25 kg</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 74%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content mobile-bottom-sheet bg-white rounded-xl p-4 sm:p-8 max-w-md w-full mx-4">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Edit Profile</h3>
+            <form onsubmit="saveProfile(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="editName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" value="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="editEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" value="john.doe@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input type="tel" id="editPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" value="+1 (555) 123-4567">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea id="editAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">123 Green Street, Eco City, EC 12345</textarea>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="button-press flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="closeModal('editProfileModal')" class="button-press flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content mobile-bottom-sheet bg-white rounded-xl p-4 sm:p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span class="text-2xl sm:text-3xl">✅</span>
+                </div>
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2" id="successTitle">Success!</h3>
+                <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6" id="successMessage">Your action was completed successfully.</p>
+                <button onclick="closeModal('successModal')" class="button-press bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 text-sm sm:text-base">
+                    Great!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="hidden fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+        <div class="min-h-screen flex items-center justify-center px-4 sm:px-6">
+            <div class="max-w-md w-full space-y-8">
+                <!-- Logo and Title -->
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-2xl">🧱</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900">Welcome Back</h2>
+                    <p class="mt-2 text-sm text-gray-600">Sign in to your Eco Brick Exchange account</p>
+                </div>
+
+                <!-- Login Form -->
+                <div class="bg-white rounded-xl shadow-md p-6 sm:p-8">
+                    <form onsubmit="handleLogin(event)" class="space-y-6">
+                        <div>
+                            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input id="loginEmail" name="email" type="email" required 
+                                   class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Enter your email" value="john.doe@example.com">
+                        </div>
+
+                        <div>
+                            <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input id="loginPassword" name="password" type="password" required 
+                                   class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Enter your password" value="password123">
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input id="rememberMe" name="remember" type="checkbox" 
+                                       class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                <label for="rememberMe" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                            </div>
+                            <a href="#" class="text-sm text-green-600 hover:text-green-500">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" 
+                                class="button-press w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div class="mt-6">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-2 gap-3">
+                            <button onclick="showSuccess('Demo Feature', 'Social login is a demo feature. Use the regular login above.')"
+                                    class="button-press w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="mr-2">📧</span>
+                                Google
+                            </button>
+                            <button onclick="showSuccess('Demo Feature', 'Social login is a demo feature. Use the regular login above.')"
+                                    class="button-press w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="mr-2">📘</span>
+                                Facebook
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Don't have an account? 
+                            <button onclick="showSignup()" class="text-green-600 hover:text-green-500 font-medium">Sign up</button>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Demo Credentials Info -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <span class="text-blue-600 text-lg">ℹ️</span>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Demo Credentials</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p><strong>Email:</strong> john.doe@example.com</p>
+                                <p><strong>Password:</strong> password123</p>
+                                <p class="mt-1 text-xs">These are pre-filled for demo purposes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Page -->
+    <div id="signupPage" class="hidden fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+        <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
+            <div class="max-w-md w-full space-y-8">
+                <!-- Logo and Title -->
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-2xl">🧱</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900">Create Account</h2>
+                    <p class="mt-2 text-sm text-gray-600">Join Eco Brick Exchange and start earning rewards</p>
+                </div>
+
+                <!-- Signup Form -->
+                <div class="bg-white rounded-xl shadow-md p-6 sm:p-8">
+                    <form onsubmit="handleSignup(event)" class="space-y-4">
+                        <div>
+                            <label for="signupName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input id="signupName" name="name" type="text" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Enter your full name">
+                        </div>
+
+                        <div>
+                            <label for="signupEmail" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input id="signupEmail" name="email" type="email" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Enter your email">
+                        </div>
+
+                        <div>
+                            <label for="signupPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input id="signupPassword" name="password" type="password" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Create a password">
+                        </div>
+
+                        <div>
+                            <label for="signupConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                            <input id="signupConfirmPassword" name="confirmPassword" type="password" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Confirm your password">
+                        </div>
+
+                        <div class="flex items-center">
+                            <input id="agreeTerms" name="terms" type="checkbox" required
+                                   class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                            <label for="agreeTerms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the <a href="#" class="text-green-600 hover:text-green-500">Terms of Service</a> and 
+                                <a href="#" class="text-green-600 hover:text-green-500">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" 
+                                class="button-press w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium">
+                            Create Account
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Already have an account? 
+                            <button onclick="showLogin()" class="text-green-600 hover:text-green-500 font-medium">Sign in</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let userPoints = 1250;
+        let userContributions = 47;
+        let plasticRecycled = 23.5;
+
+        // Modal functions
+        function showContributeModal() {
+            if (checkAuth()) {
+                document.getElementById('contributeModal').classList.add('active');
+                setupContributionForm();
+            }
+        }
+
+        function showSmartBinStatus() {
+            document.getElementById('smartBinModal').classList.add('active');
+        }
+
+        function showRewardsModal() {
+            document.getElementById('rewardsModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Profile page functions
+        function showProfilePage() {
+            document.getElementById('profilePage').classList.remove('hidden');
+            updateProfileStats();
+        }
+
+        function hideProfilePage() {
+            document.getElementById('profilePage').classList.add('hidden');
+        }
+
+        function showEditProfile() {
+            document.getElementById('editProfileModal').classList.add('active');
+        }
+
+        function updateProfileStats() {
+            document.getElementById('profileTotalPoints').textContent = userPoints.toLocaleString();
+            document.getElementById('profileTotalContributions').textContent = userContributions;
+            document.getElementById('profilePlasticRecycled').textContent = plasticRecycled.toFixed(1);
+        }
+
+        function saveProfile(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+            
+            // Update profile display
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileEmail').textContent = email;
+            document.getElementById('userName').textContent = name;
+            
+            closeModal('editProfileModal');
+            showSuccess('Profile Updated!', 'Your profile information has been successfully updated.');
+        }
+
+        // Smart Bin QR Scanner simulation
+        function simulateQRScan() {
+            closeModal('smartBinModal');
+            
+            // Simulate successful scan and auto-detection
+            setTimeout(() => {
+                const detectedItems = Math.floor(Math.random() * 5) + 1; // 1-5 items detected
+                const pointsPerItem = Math.floor(Math.random() * 30) + 15; // 15-45 points per item
+                const totalPoints = detectedItems * pointsPerItem;
+                
+                userPoints += totalPoints;
+                userContributions += detectedItems;
+                plasticRecycled += detectedItems * 0.4;
+                
+                updateStats();
+                addActivity(`Smart bin detected ${detectedItems} items`, `+${totalPoints} points`, 'now');
+                
+                showSuccess('Smart Bin Contribution Claimed!', `The smart bin detected ${detectedItems} items you contributed. You earned ${totalPoints} points automatically!`);
+            }, 1000);
+        }
+
+
+
+        // Reward redemption
+        function redeemReward(rewardType, cost) {
+            if (userPoints >= cost) {
+                userPoints -= cost;
+                updateStats();
+                
+                const rewardNames = {
+                    pen: 'Eco-Friendly Pen',
+                    plant: 'Plant Sapling',
+                    coupon: 'Store Discount Coupon',
+                    bottle: 'Reusable Water Bottle',
+                    bag: 'Eco Shopping Bag',
+                    premium: 'Eco Champion Kit'
+                };
+                
+                addActivity(`Redeemed ${rewardNames[rewardType]}`, `-${cost} points`, 'now');
+                showSuccess('Reward Redeemed!', `You successfully redeemed a ${rewardNames[rewardType]}! It will be delivered to your registered address.`);
+                
+                closeModal('rewardsModal');
+            } else {
+                showSuccess('Insufficient Points', `You need ${cost - userPoints} more points to redeem this reward. Keep contributing!`);
+            }
+        }
+
+        // Update statistics display
+        function updateStats() {
+            document.getElementById('totalPoints').textContent = userPoints.toLocaleString();
+            document.getElementById('totalContributions').textContent = userContributions;
+            document.getElementById('plasticRecycled').textContent = plasticRecycled.toFixed(1);
+        }
+
+        // Contribution form functions
+        function setupContributionForm() {
+            const wasteTypeSelect = document.getElementById('wasteType');
+            const quantityInput = document.getElementById('quantity');
+            const pointsPreview = document.getElementById('pointsPreview');
+            const estimatedPoints = document.getElementById('estimatedPoints');
+            
+            function updatePointsPreview() {
+                const selectedOption = wasteTypeSelect.options[wasteTypeSelect.selectedIndex];
+                const quantity = parseInt(quantityInput.value) || 0;
+                
+                if (selectedOption && selectedOption.dataset.points && quantity > 0) {
+                    const pointsPerItem = parseInt(selectedOption.dataset.points);
+                    const totalPoints = pointsPerItem * quantity;
+                    
+                    estimatedPoints.textContent = `${totalPoints} pts`;
+                    pointsPreview.classList.remove('hidden');
+                } else {
+                    pointsPreview.classList.add('hidden');
+                }
+            }
+            
+            wasteTypeSelect.addEventListener('change', updatePointsPreview);
+            quantityInput.addEventListener('input', updatePointsPreview);
+            
+            // Reset form
+            document.getElementById('wasteType').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('notes').value = '';
+            pointsPreview.classList.add('hidden');
+        }
+
+        function submitContribution(event) {
+            event.preventDefault();
+            
+            const wasteType = document.getElementById('wasteType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const location = document.getElementById('location').value;
+            const notes = document.getElementById('notes').value;
+            
+            const selectedOption = document.getElementById('wasteType').options[document.getElementById('wasteType').selectedIndex];
+            const pointsPerItem = parseInt(selectedOption.dataset.points);
+            const totalPoints = pointsPerItem * quantity;
+            
+            // Update user stats
+            userPoints += totalPoints;
+            userContributions += quantity;
+            
+            // Estimate plastic recycled (rough calculation)
+            const plasticWeight = wasteType === 'plastic' ? quantity * 0.5 : 
+                                 wasteType === 'aluminum' ? quantity * 0.3 :
+                                 wasteType === 'glass' ? quantity * 0.8 : 
+                                 quantity * 0.2;
+            plasticRecycled += plasticWeight;
+            
+            updateStats();
+            
+            // Get waste type name and location name
+            const wasteTypeNames = {
+                plastic: 'Plastic Bottles',
+                paper: 'Paper Waste',
+                aluminum: 'Aluminum Cans',
+                glass: 'Glass Containers',
+                organic: 'Organic Waste',
+                electronics: 'Electronics'
+            };
+            
+            const locationNames = {
+                'main-campus': 'Main Campus Bin #1',
+                'cafeteria': 'Cafeteria Bin #2',
+                'library': 'Library Bin #3',
+                'garden': 'Garden Bin #4',
+                'parking': 'Parking Lot Bin #5'
+            };
+            
+            const activityText = `${wasteTypeNames[wasteType]} contributed`;
+            const locationText = locationNames[location];
+            
+            addActivity(activityText, `+${totalPoints} points`, 'now');
+            
+            closeModal('contributeModal');
+            showSuccess('Contribution Added!', `Successfully recorded ${quantity} ${wasteTypeNames[wasteType].toLowerCase()} at ${locationText}. You earned ${totalPoints} points!`);
+        }
+
+        // Add activity to recent activity list
+        function addActivity(action, points, time) {
+            const activityList = document.getElementById('activityList');
+            const isPositive = points.startsWith('+');
+            
+            const activityItem = document.createElement('div');
+            activityItem.className = `flex items-center space-x-3 sm:space-x-4 p-3 ${isPositive ? 'bg-green-50' : 'bg-red-50'} rounded-lg animate-slide-in`;
+            activityItem.innerHTML = `
+                <div class="w-8 h-8 sm:w-10 sm:h-10 ${isPositive ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="${isPositive ? 'text-green-600' : 'text-red-600'} text-sm sm:text-base">${isPositive ? '➕' : '🎁'}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-800 text-sm sm:text-base">${action}</p>
+                    <p class="text-xs sm:text-sm text-gray-600">${time} • ${points}</p>
+                </div>
+                <span class="${isPositive ? 'text-green-600' : 'text-red-600'} font-semibold text-sm sm:text-base flex-shrink-0">${points}</span>
+            `;
+            
+            activityList.insertBefore(activityItem, activityList.firstChild);
+            
+            // Keep only the latest 5 activities
+            while (activityList.children.length > 5) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+
+        // Show success modal
+        function showSuccess(title, message) {
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        });
+
+        // Authentication functions
+        let isLoggedIn = false; // Start logged in for demo
+
+        function logout() {
+            isLoggedIn = false;
+            localStorage.removeItem('isLoggedIn'); // <-- Clear saved login state
+            hideProfilePage();
+            showLogin();
+            showSuccess('Logged Out', 'You have been successfully logged out.');
+        }
+
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('signupPage').classList.add('hidden');
+        }
+
+        function showSignup() {
+            document.getElementById('signupPage').classList.remove('hidden');
+            document.getElementById('loginPage').classList.add('hidden');
+        }
+
+        function hideAuthPages() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('signupPage').classList.add('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (email === 'john.doe@example.com' && password === 'password123') {
+                isLoggedIn = true;
+                localStorage.setItem('isLoggedIn', 'true');  // <-- Save login state
+                hideAuthPages();
+                showSuccess('Welcome Back!', 'You have successfully logged in to your account.');
+                document.getElementById('userName').textContent = 'John Doe';
+            } else {
+                showSuccess('Login Failed', 'Invalid email or password. Please try again.');
+            }
+        }
+
+
+        function handleSignup(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            // Basic validation
+            if (password !== confirmPassword) {
+                showSuccess('Signup Failed', 'Passwords do not match. Please try again.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showSuccess('Signup Failed', 'Password must be at least 6 characters long.');
+                return;
+            }
+            
+            // Demo signup success
+            isLoggedIn = true;
+            hideAuthPages();
+            
+            // Update user info
+            document.getElementById('userName').textContent = name;
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileEmail').textContent = email;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            
+            showSuccess('Account Created!', `Welcome to Eco Brick Exchange, ${name}! Your account has been created successfully.`);
+        }
+
+        // Check authentication on page actions
+        function checkAuth() {
+            if (!isLoggedIn) {
+                showLogin();
+                return false;
+            }
+            return true;
+        }
+
+        // Override existing functions to check auth
+        const originalShowProfilePage = showProfilePage;
+        showProfilePage = function() {
+            if (checkAuth()) {
+                originalShowProfilePage();
+            }
+        };
+
+        const originalShowSmartBinStatus = showSmartBinStatus;
+        showSmartBinStatus = function() {
+            if (checkAuth()) {
+                originalShowSmartBinStatus();
+            }
+        };
+
+        const originalRedeemReward = redeemReward;
+        redeemReward = function(rewardType, cost) {
+            if (checkAuth()) {
+                originalRedeemReward(rewardType, cost);
+            }
+        };
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+            if (!isLoggedIn) {
+                showLogin();
+            }
+        });
+
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9653bb4ad3a9dd0d',t:'MTc1MzUzMTE3My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
